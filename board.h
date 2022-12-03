@@ -1,8 +1,8 @@
 // board.h file
 
-class board {
+class Board {
     public:
-        board();                // The constructor sets grid array values and other member fields to zero.
+        Board();                // The constructor sets grid array values and other member fields to zero.
         void play();            // An entire game of 2048 is executed.
 
         bool moveLeft();        // These four move methods push all squares towards that direction.
@@ -10,6 +10,7 @@ class board {
         bool moveUp();          // spawn unless a square has moved. They also combine two squares of the
         bool moveDown();        // same value into one square of doubled value if two are comined.
 
+        void incrementScore(int);
         bool boardIsValid();    // This function checks whether there is another move possible, or if the game should end.
         void spawnSquare();     // Randomly selects an open spot in the board and randomly selects 2 or 4 to spawn in that square.
         void clearBoard();      // Sets all values and score back to zero for a new game to be played.

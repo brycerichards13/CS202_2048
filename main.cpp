@@ -3,7 +3,9 @@
 #include <iostream>
 
 using namespace std;
+
 int main() {
-    board Gameboard();
+    Board gameboard;
+    gameboard.play();
     return 0;
 }
