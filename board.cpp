@@ -1,6 +1,7 @@
 // Board CPP File
 #include<iostream>
 #include<cstdlib>
+#include <sstream>
 #include "board.h"
 using namespace std;
 
@@ -12,6 +13,11 @@ so [1][2] is located at:
 0 0 0 0
 0 0 0 0
 */
+
+void printTopLine();
+void printEmptyLine();
+void printMiddleLine();
+void printBottomLine();
 
 Board::Board() {
     for (int i = 0; i < 4; i++) {
@@ -36,7 +42,7 @@ void Board::play() {
 
         while(badInput) {
             badInput = 0;
-            cout << "Enter move (w:up, a:left, s:down, d:left): ";
+            cout << "Enter move (w:up, a:left, s:down, d:right): ";
             cin >> input;
             cout << endl;
 
@@ -175,40 +181,95 @@ void Board::clearBoard() {
     return;
 }
 
-// Notes on print: Using ascii values 205 for horizontal lines, 186 for verticals, and 
-// similar "pipe" looking characters. Max number possible in 2048 is 131072, so each
-// digit gets 10 spaces; 6 for number, 2 on each side to space it out.
-// So, each line is (10*4) + 5 characters long, so 45.
-// Height of board is not decided yet :shrug:
-
-// Okay, this looks like shit. Feel free to delete all of it lmao. I'll probably make a separate function
-// for each part, cuz this is so confusing to write / read...
+// Rewrote the print board function
+// Uses seperate helper functions to print each individual row
+// The printf statement finds the number of characters-
+//  using string streams
 void Board::printBoard() {
-    char vert = 186;
+    printTopLine();
+    for(int i = 0; i < 4; i++)
+    {
+        printEmptyLine();
+        for(int j = 0; j < 4; j++)
+        {
+            cout << (char)186;
+            stringstream ss;
+            ss >> grid[i][j];
+            ss.seekg(0, ios::end);
+            int size = ss.tellg();
+            printf("%*d%*s",5-(size/2),grid[i][j],5-size/2,"");
+        }
+        cout << (char)186 << endl;
+        printEmptyLine();
+        if(i != 3)
+        {
+            printMiddleLine();
+        }
+    }
+    printBottomLine();
+    cout << endl;
+    return;
+}
 
-    cout << "Score: " << score << endl;
-    
-    // First line is printed.
+void printTopLine() {
     cout << (char)201;
-    for (int i = 0; i < 43; i++) {
+    for(int j = 0; j < 10; j++)
+    {
         cout << (char)205;
     }
+
+    for(int i = 0; i < 3; i++)
+    {
+        cout << (char)203;
+        for(int j = 0; j < 10; j++)
+        {
+            cout << (char)205;
+        }
+    }
     cout << (char)187 << endl;
+}
 
-    for (int i = 0; i < 4; i++) {
+void printEmptyLine() {
+    for(int i = 0; i < 4; i++)
+    {
+        cout << (char)186;
+        cout << "          ";
+    }
+    cout << (char)186 << endl;
+}
 
-        for (int j = 0; j < 1; j++) {
-            printf("%c%10c%c%10c%c%10c%c%10c%c\n", vert, ' ', vert, ' ', vert, ' ', vert, ' ', vert);
+void printMiddleLine() {
+    cout << (char)204;
+    for(int j = 0; j < 10; j++)
+    {
+        cout << (char)205;
+    }
+
+    for(int i = 0; i < 3; i++)
+    {
+        cout << (char)206;
+        for(int j = 0; j < 10; j++)
+        {
+            cout << (char)205;
         }
+    }
+    cout << (char)185 << endl;
+}
 
-        for (int j = 0; j < 4; j++) {
-            if (grid[i][j] == 0) printf("%10s", " ");
-            else printf("%10d" ,grid[i][j]);
-        }
+void printBottomLine() {
+    cout << (char)200;
+    for(int j = 0; j < 10; j++)
+    {
+        cout << (char)205;
+    }
 
-        for (int j = 0; j < 1; j++) {
-            printf("%c%10c%c%10c%c%10c%c%10c%c\n", vert, ' ', vert, ' ', vert, ' ', vert, ' ', vert);
+    for(int i = 0; i < 3; i++)
+    {
+        cout << (char)202;
+        for(int j = 0; j < 10; j++)
+        {
+            cout << (char)205;
         }
-    }    
-    return;
+    }
+    cout << (char)188 << endl;
 }
