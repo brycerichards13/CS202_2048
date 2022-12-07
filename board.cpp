@@ -2,6 +2,7 @@
 #include<iostream>
 #include<cstdlib>
 #include <sstream>
+#include <stdlib.h>
 #include "board.h"
 using namespace std;
 
@@ -18,6 +19,7 @@ void printTopLine();
 void printEmptyLine();
 void printMiddleLine();
 void printBottomLine();
+void pushSquares();
 
 Board::Board() {
     for (int i = 0; i < 4; i++) {
@@ -34,13 +36,32 @@ Board::Board() {
 void Board::play() {
     char input;
     bool badInput;
+    bool keepPlaying = false;
     spawnSquare();
     printBoard();
 
-    while(boardIsValid()) {
+    while(boardIsValid() == 1 || boardIsValid() == 2) 
+    {
+        if(boardIsValid() == 2 && keepPlaying == false)
+        {
+            char keepPlayingInput;
+            cout << "YOU WIN! Would you like to keep playing?";
+            while(keepPlayingInput != 'T' || keepPlayingInput != 'F')
+            {
+                cin >> keepPlayingInput;
+            }
+            if(keepPlayingInput == 'T')
+            {
+                keepPlaying == true;
+            }
+            else if(keepPlayingInput == 'F')
+            {
+                exit(0);
+            }
+        }
         badInput = 1;
-
-        while(badInput) {
+        bool movedBool = false;
+        while(badInput || movedBool == false) {
             badInput = 0;
             cout << "Enter move (w:up, a:left, s:down, d:right): ";
             cin >> input;
@@ -48,88 +69,92 @@ void Board::play() {
 
             switch(input) {
                 case 'w':
-                    moveUp();
-                break;
+                    movedBool = moveUp();
+                    break;
                 case 'a':
-                    moveLeft();
-                break;
+                    movedBool = moveLeft();
+                    break;
                 case 's':
-                    moveDown();
-                break;
+                    movedBool = moveDown();
+                    break;
                 case 'd':
-                    moveRight();
-                break;
+                    movedBool = moveRight();
+                    break;
                 default:
                     cout << "Invalid input." << endl;
                     badInput = 1;
-                break;
+                    break;
+            }
+            if(movedBool == false)
+            {
+                printBoard();
             }
         }
+        //cout << flush;
+        //system("CLS");
         spawnSquare();
         printBoard();
     }
+    cout << "You lost!";
 }
 
 // to merge, push everything to side, merge, then push again.
 
-bool Board::moveLeft() {    
-    for (int i = 0; i < 4; i++) {
-        // Shift 1
-        for (int j = 2; j >= 0; j--) {
-            if (grid[i][j] == 0) {
-                grid[i][j] = grid[i][j+1];  // Shift left once if zero to left of square.
-                grid[i][j+1] = 0;
-
-                if (j > 0 && grid[i][j-1] == 0) {   // Shifts left a second time in 2002 case.
-                    grid[i][j-1] = grid[i][j];
-                    grid[i][j] = 0;
-                } 
-            }
-        }
-
-        // Merge / shift if zero.
-        for (int j = 0; j < 3; j++) {
-            if (grid[i][j] != 0 && grid[i][j] == grid[i][j+1]) {
-                grid[i][j] *= 2;
-                grid[i][j+1] = 0;
-                incrementScore(grid[i][j]);
-            }
-            else if (grid[i][j] == 0 && grid[i][j+1] != 0) {
-                grid[i][j] = grid[i][j+1];
-                grid[i][j+1] = 0;
-            }
-        }
-
-        // Shift again
-        for (int j = 2; j >= 0; j--) {
-            if (grid[i][j] == 0) {
-                grid[i][j] = grid[i][j+1];
-                grid[i][j+1] = 0;
-            }
-        }
+bool Board::moveLeft() {
+    int i = 0;
+    i += pushSquares();
+    i += combineSquares();
+    i += pushSquares();
+    if(i > 0)
+    {
+        return true;
     }
-    return 0;
+    return false;
 }
 
 bool Board::moveRight() {
-    return 0;
+    bool movedBool;
+    flipHorizontally();
+    movedBool = moveLeft();
+    flipHorizontally();
+    return movedBool;
 }
 
 bool Board::moveUp() {
-    return 0;
+    bool movedBool;
+    flipDiag();
+    movedBool = moveLeft();
+    flipDiag();
+    return movedBool;
 }
 
 bool Board::moveDown() {
-    return 0;
+    //VV --This also works the same, not important but I thought it was interesting-- VV
+    // flipHorizontally();
+    // flipDiag();
+    // flipHorizontally();
+    // moveLeft();
+    // flipHorizontally();
+    // flipDiag();
+    // flipHorizontally();
+    bool movedBool;
+    flipAntiDiag();
+    movedBool = moveLeft();
+    flipAntiDiag();
+    return movedBool;
 }
 
 void Board::incrementScore(int val) {
     score += val;
 }
 
-bool Board::boardIsValid() {
+int Board::boardIsValid() {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
+            if (grid[i][j] == 2048)
+            {
+                return 2;
+            }
             if (grid[i][j] == 0) {
                 return 1;
             }
@@ -141,16 +166,15 @@ bool Board::boardIsValid() {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 3; j++) {
             if (grid[i][j] == grid[i][j+1]) return 1;
+            if (grid[i][j] == grid[i+1][j]) return 1;
         } 
     }
 
-    // Check verticals.
-    for (int j = 0; j < 4; j++) {
-        for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 3; j++) {
             if (grid[i][j] == grid[i+1][j]) return 1;
-        }
+        } 
     }
-
     return 0;
 }
 
@@ -186,6 +210,7 @@ void Board::clearBoard() {
 // The printf statement finds the number of characters-
 //  using string streams
 void Board::printBoard() {
+    cout << "Score : " << score << endl;
     printTopLine();
     for(int i = 0; i < 4; i++)
     {
@@ -272,4 +297,100 @@ void printBottomLine() {
         }
     }
     cout << (char)188 << endl;
+}
+
+bool Board::pushSquares() {
+    bool moveBool = false;
+    for (int i = 0; i < 4; i++)
+    {
+        int firstEmptyPos = 0;
+        for (int j = 0; j < 4; j++)
+        {
+            if(grid[i][j] != 0)
+            {
+                if(firstEmptyPos != j)
+                {
+                    grid[i][firstEmptyPos] = grid[i][j];
+                    grid[i][j] = 0;
+                    moveBool = true;
+                }
+                firstEmptyPos++;
+            }
+        }
+    }
+    return moveBool;
+}
+
+bool Board::combineSquares(){
+    bool moveBool = false;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            if(grid[i][j] == grid[i][j+1] && grid[i][j] != 0)
+            {
+                grid[i][j] = grid[i][j] * 2;
+                grid[i][j+1] = 0;
+                moveBool = true;
+                incrementScore(grid[i][j]);
+            }
+        }
+    }
+    return moveBool;
+}
+
+void Board::flipHorizontally(){
+    int tempGrid[4][4];
+    for(int i = 0; i < 4; i++)
+    {
+        int reverseJ = 3;
+        for(int j = 0; j < 2; j++)
+        {
+            tempGrid[i][reverseJ] = grid[i][reverseJ];
+            grid[i][reverseJ] = grid[i][j];
+            grid[i][j] = tempGrid[i][reverseJ];
+            reverseJ--;
+            //cout << "j " << j << endl;
+        }
+    }
+}
+
+void Board::flipDiag(){
+    int tempGrid[4][4];
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            tempGrid[i][j] = grid[j][i];
+        }
+    }
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            grid[i][j] = tempGrid[i][j];
+        }
+    }
+}
+
+void Board::flipAntiDiag(){
+    int tempGrid[4][4];
+    int reverseJ = 3; 
+    for(int i = 0; i < 4; i++)
+    {
+        int reverseI = 3;
+        for(int j = 0; j < 4; j++)
+        {
+            tempGrid[i][j] = grid[reverseI][reverseJ];
+            reverseI--;
+        }
+        reverseJ--;
+    }
+    for(int i = 0; i < 4; i++)
+    {
+        for(int j = 0; j < 4; j++)
+        {
+            grid[i][j] = tempGrid[i][j];
+        }
+    }
 }
